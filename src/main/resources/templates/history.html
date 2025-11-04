@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别历史 - 垃圾识别管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .navbar-user span {
+            color: #666;
+        }
+        
+        .btn-logout {
+            padding: 8px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .nav-tab:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .content-header h2 {
+            color: #333;
+        }
+        
+        .filter-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-box select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f9f9f9;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .image-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-recyclable {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge-harmful {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .badge-kitchen {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .badge-other {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            position: relative;
+            background: white;
+            margin: 50px auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+        }
+        
+        .modal-image {
+            width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">垃圾识别管理系统</div>
+        <div class="navbar-user">
+            <span id="username"></span>
+            <button class="btn-logout" onclick="logout()">退出登录</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <a href="/dashboard" class="nav-tab">仪表板</a>
+            <a href="/users" class="nav-tab">用户管理</a>
+            <a href="/history" class="nav-tab active">识别历史</a>
+        </div>
+        
+        <div class="content-card">
+            <div class="content-header">
+                <h2>识别历史记录</h2>
+                <div class="filter-box">
+                    <select id="categoryFilter">
+                        <option value="">全部分类</option>
+                        <option value="可回收垃圾">可回收垃圾</option>
+                        <option value="有害垃圾">有害垃圾</option>
+                        <option value="厨余垃圾">厨余垃圾</option>
+                        <option value="其他垃圾">其他垃圾</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="tableContainer">
+                <div class="loading">加载中...</div>
+            </div>
+            
+            <div class="pagination">
+                <button onclick="prevPage()" id="prevBtn">上一页</button>
+                <span id="pageInfo">第 1 页</span>
+                <button onclick="nextPage()" id="nextBtn">下一页</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <img id="modalImage" class="modal-image" src="" alt="识别图片">
+        </div>
+    </div>
+    
+    <script>
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        
+        if (!token) {
+            window.location.href = '/login';
+        }
+        
+        document.getElementById('username').textContent = username;
+        
+        let currentPage = 0;
+        let totalPages = 0;
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+        
+        async function loadHistory(page = 0) {
+            try {
+                let url = `/api/recognition-history/page?page=${page}&size=10`;
+                if (userId) {
+                    url += `&userId=${userId}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    const data = result.data;
+                    currentPage = data.currentPage;
+                    totalPages = data.totalPages;
+                    
+                    displayHistory(data.histories);
+                    updatePagination();
+                }
+            } catch (error) {
+                console.error('加载历史失败', error);
+                document.getElementById('tableContainer').innerHTML = 
+                    '<div class="loading">加载失败</div>';
+            }
+        }
+        
+        function displayHistory(histories) {
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户ID</th>
+                            <th>图片</th>
+                            <th>垃圾类型</th>
+                            <th>分类</th>
+                            <th>置信度</th>
+                            <th>识别时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            histories.forEach(history => {
+                const badgeClass = getCategoryBadgeClass(history.category);
+                html += `
+                    <tr>
+                        <td>${history.id}</td>
+                        <td>${history.userId}</td>
+                        <td>
+                            ${history.imageUrl ? 
+                                `<img src="${history.imageUrl}" class="image-thumbnail" 
+                                onclick="showImage('${history.imageUrl}')" alt="识别图片">` : 
+                                '-'}
+                        </td>
+                        <td>${history.garbageType || '-'}</td>
+                        <td><span class="badge ${badgeClass}">${history.category || '-'}</span></td>
+                        <td>${history.confidence ? (history.confidence * 100).toFixed(2) + '%' : '-'}</td>
+                        <td>${formatDate(history.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-delete" onclick="deleteHistory(${history.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+        
+        function getCategoryBadgeClass(category) {
+            if (!category) return 'badge-other';
+            if (category.includes('可回收')) return 'badge-recyclable';
+            if (category.includes('有害')) return 'badge-harmful';
+            if (category.includes('厨余')) return 'badge-kitchen';
+            return 'badge-other';
+        }
+        
+        function updatePagination() {
+            document.getElementById('pageInfo').textContent = `第 ${currentPage + 1} / ${totalPages} 页`;
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+        }
+        
+        function prevPage() {
+            if (currentPage > 0) {
+                loadHistory(currentPage - 1);
+            }
+        }
+        
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                loadHistory(currentPage + 1);
+            }
+        }
+        
+        function showImage(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        
+        async function deleteHistory(historyId) {
+            if (!confirm('确定要删除此记录吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/recognition-history/${historyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert('删除成功');
+                    loadHistory(currentPage);
+                } else {
+                    alert('删除失败：' + result.message);
+                }
+            } catch (error) {
+                console.error('删除记录失败', error);
+                alert('删除失败');
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+        
+        loadHistory();
+    </script>
+</body>
+</html>
+
