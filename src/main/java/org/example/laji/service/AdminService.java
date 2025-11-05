@@ -2,7 +2,6 @@ package org.example.laji.service;
 
 import org.example.laji.entity.Admin;
 import org.example.laji.repository.AdminRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +13,9 @@ import java.util.Optional;
 public class AdminService {
     
     private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
     
-    public AdminService(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
+    public AdminService(AdminRepository adminRepository) {
         this.adminRepository = adminRepository;
-        this.passwordEncoder = passwordEncoder;
     }
     
     public Optional<Admin> findByUsername(String username) {
@@ -26,12 +23,13 @@ public class AdminService {
     }
     
     public Admin createAdmin(Admin admin) {
-        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
+        // 密码明文存储，不加密
         return adminRepository.save(admin);
     }
     
-    public boolean validatePassword(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+    public boolean validatePassword(String rawPassword, String storedPassword) {
+        // 明文密码直接比较
+        return rawPassword != null && rawPassword.equals(storedPassword);
     }
     
     public List<Admin> getAllAdmins() {

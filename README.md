@@ -19,7 +19,7 @@
 - Spring Boot 3.5.7
 - Spring Security + JWT
 - Spring Data JPA
-- MySQL / H2 Database
+- MySQL
 - Lombok
 - OkHttp（调用百度API）
 
@@ -59,7 +59,7 @@
 
 - JDK 17+
 - Maven 3.6+
-- MySQL 5.7+ (可选，开发环境使用H2)
+- MySQL 5.7+
 
 ### 配置说明
 
@@ -69,16 +69,20 @@ git clone <repository-url>
 cd laji
 ```
 
-2. 配置数据库（可选）
+2. 配置数据库
 
-如果使用MySQL，修改`src/main/resources/application.properties`：
+修改`src/main/resources/application.properties`中的数据库连接信息：
 
 ```properties
-# 注释掉H2配置，取消注释MySQL配置
-spring.datasource.url=jdbc:mysql://localhost:3306/laji_db?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+spring.datasource.url=jdbc:mysql://localhost:3306/laji_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowPublicKeyRetrieval=true
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+```
+
+然后执行 `init_mysql.sql` 脚本初始化数据库：
+```bash
+mysql -u root -p < init_mysql.sql
 ```
 
 3. 配置百度EasyDL API
@@ -154,10 +158,10 @@ laji/
 │   │       │   ├── dashboard.html
 │   │       │   ├── users.html
 │   │       │   └── history.html
-│   │       ├── application.properties
-│   │       └── data.sql         # 初始化数据
+│   │       └── application.properties
 │   └── test/
 ├── .gitignore
+├── init_mysql.sql               # MySQL初始化脚本
 ├── pom.xml
 └── README.md
 ```
@@ -236,7 +240,7 @@ git merge feature/new-feature
 
 ## 注意事项
 
-1. **默认使用H2内存数据库**：重启后数据会丢失，生产环境请使用MySQL
+1. **数据库配置**：请确保MySQL服务已启动，并正确配置数据库连接信息
 2. **百度API配置**：需要自行申请百度EasyDL账号并配置API密钥
 3. **密码安全**：生产环境请修改默认管理员密码
 4. **JWT密钥**：生产环境请修改JWT密钥配置

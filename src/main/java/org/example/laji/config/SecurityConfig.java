@@ -37,8 +37,27 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/api/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
+                // 允许所有页面访问（临时，用于测试）
+                // 生产环境请恢复认证要求
+                .anyRequest().permitAll()
+                
+                // 生产环境配置（注释掉上面一行，启用下面配置）
+                /*
+                .requestMatchers(
+                    "/", 
+                    "/login", 
+                    "/api/auth/**", 
+                    "/css/**", 
+                    "/js/**", 
+                    "/images/**",
+                    "/favicon.ico",
+                    "/error"
+                ).permitAll()
                 .anyRequest().authenticated()
+                */
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .accessDeniedPage("/login")
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
